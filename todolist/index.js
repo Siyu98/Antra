@@ -108,10 +108,11 @@ const View = (() => {
     const formEl = document.querySelector(".todo__form");
     const todoListEl = document.querySelector(".todo__list");
     const renderTodolist = (todos) => {
+        console.log(todos);
         let template = "";
         todos.sort((a,b)=>b.id-a.id).forEach((todo) => {
             template += `
-                <li><div class="span" id="input${todo.id}">${todo.content}</div><button class="btn--delete" id="${todo.id}">Delete</button><button class="btn--update" id="${todo.id}">Update</button><button class="btn--submit" id="${todo.id}">Submit</button></li>
+                <li><span class="span" id="input-${todo.id}">${todo.title}</span><button class="btn--delete" id="${todo.id}">Delete</button><button class="btn--update" id="${todo.id}">Update</button><button class="btn--submit" id="${todo.id}">Submit</button></li>
             `
         })
         todoListEl.innerHTML = template;
@@ -131,11 +132,11 @@ const ViewModel = ((Model, View) => {
     const addTodo = () => {
         View.formEl.addEventListener("submit", (event) => {
             event.preventDefault();
-            const content = event.target[0].value;
-            if(content.trim() === "") return;
-            const newTodo = { content }
+            const title = event.target[0].value;
+            if(title.trim() === "") return;
+            const newTodo = { title, completed:false }
             APIs.addTodo(newTodo).then(res => {
-                // console.log("Res", res);
+                console.log("Res", res);
                 state.todos = [res, ...state.todos];//anti-pattern
             })
 
@@ -163,8 +164,8 @@ const ViewModel = ((Model, View) => {
             const { id } = event.target;
             if (event.target.className === "btn--update" && event.target.id==id) {
                 console.log("targetid:",id);
-                let element = document.getElementById(`input${id}`);
-                element.innerHTML=`<input id="edit${id}", type="text"/>`;
+                let element = document.getElementById(`input-${id}`);
+                element.innerHTML=`<input id="edit-${id}", type="text"/>`;
             }
         })
     }
@@ -174,13 +175,13 @@ const ViewModel = ((Model, View) => {
             console.log(event.currentTarget, event.target);
             const { id } = event.target;
             if (event.target.className === "btn--submit" && event.target.id==id) {
-                let elementvalue = document.getElementById(`edit${id}`).value;
+                let elementvalue = document.getElementById(`edit-${id}`).value;
                 console.log(elementvalue);
                 APIs.putTodos(id,elementvalue).then(res => {
                     console.log("Res", res);
                     state.todos = state.todos.map((todo) => {
-                        if(todo.id==id){
-                            todo.content=elementvalue;
+                        if(+todo.id==+id){
+                            todo.title=elementvalue;
                         }
                         return todo;
                     });
@@ -195,9 +196,13 @@ const ViewModel = ((Model, View) => {
             const { id } = event.target;
             if (event.target.className === "span") {
                 const curTodo = state.todos.filter((todo) => todo.id !== id)[0]
-                const status=curTodo.status;
+                console.log(curTodo);
+                const status=curTodo.completed;
                 console.log(status);
-                APIs.updatestatus()
+                APIs.updatestatesTodos(id.split("-")[1], !status).then(res => {
+                    console.log("Res", res);
+                    document.getElementById(id).style.textDecoration='line-through'
+                })
             }
         })
     }
