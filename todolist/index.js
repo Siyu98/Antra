@@ -204,6 +204,12 @@ const ViewModel = ((Model, View) => {
                     document.getElementById(id).style.textDecoration='line-through'
                 })
             }
+            state.todos = state.todos.map((todo) => {
+                if(+todo.id==+id.split("-")[1]){
+                   todo.completed=!todo.completed;
+                }
+                return todo;
+            });
         })
     }
 
